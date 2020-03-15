@@ -5,12 +5,16 @@ interface IC3 {
     function pay (uint , address) external;
 }
 
+interface IC5 {
+    function address2String(address) external pure returns(string memory);
+    function pay(uint , Rewards) external;
+}
+
 interface IC4 {
     // uncomment one of the following two lines
     // function getAddress() external returns (string memory);
     function getAddress(address given_address) external returns (string memory);
 } 
-
 
 contract C3 is IC3 {
     function() external payable{}
@@ -71,6 +75,7 @@ contract Rewards {
     address[] clients_list;
     uint reward_ratio;
     
+    function() external payable {}
     constructor(uint r) public { reward_ratio = r; }
     
     function earnRewards(address current_client, uint spending) external returns (bool status) {
@@ -96,4 +101,58 @@ contract Rewards {
     }
     
     function getRewardRatio() public view returns (uint) { return reward_ratio; }
+}
+
+contract C5 is IC5 {
+    function() external payable{}
+    
+    function address2String(address inputAddress) pure external returns (string memory) {
+        bytes memory addressBytes = new bytes(42);
+        addressBytes[0] = "0";
+        addressBytes[1] = "x";
+        uint addressInt = uint(inputAddress);
+        for (uint i = 2; i < 42; i++) {
+            uint x = (addressInt / (16**(41 - i))) %16;
+            if (x<10) x+=48; // number ASCII offset
+            else x+=87; // alpherbat ASCII offest
+            addressBytes[i] = byte(uint8(x));
+        }
+        return string(addressBytes);
+    }
+    
+    function pay(uint x, Rewards rw) external {
+        address(rw).transfer(x);
+        rw.earnRewards(address(this),x);
+        uint ratio = rw.getRewardRatio();
+        uint points = x - (x*ratio);
+        rw.redeemRewards(address(this), points);
+    }
+    
+     function string2Address(string memory _a) internal pure returns (address _parsedAddress) {
+        bytes memory tmp = bytes(_a);
+        uint160 iaddr = 0;
+        uint160 b1;
+        uint160 b2;
+        for (uint i = 2; i < 2 + 2 * 20; i += 2) {
+            iaddr *= 256;
+            b1 = uint160(uint8(tmp[i]));
+            b2 = uint160(uint8(tmp[i + 1]));
+            if ((b1 >= 97) && (b1 <= 102)) {
+                b1 -= 87;
+            } else if ((b1 >= 65) && (b1 <= 70)) {
+                b1 -= 55;
+            } else if ((b1 >= 48) && (b1 <= 57)) {
+                b1 -= 48;
+            }
+            if ((b2 >= 97) && (b2 <= 102)) {
+                b2 -= 87;
+            } else if ((b2 >= 65) && (b2 <= 70)) {
+                b2 -= 55;
+            } else if ((b2 >= 48) && (b2 <= 57)) {
+                b2 -= 48;
+            }
+            iaddr += (b1 * 16 + b2);
+        }
+        return address(iaddr);
+    }
 }
