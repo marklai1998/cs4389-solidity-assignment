@@ -66,32 +66,34 @@ contract C3 is IC3 {
     }
 }
 
-contract C4 is IC4 {
-    event Addresses(string given_address, string checksum_address);
-
-    function() external payable {}
+contract Rewards {
+    mapping (address=>uint) rewards_ledger;
+    address[] clients_list;
+    uint reward_ratio;
     
-    function getAddress(address given_address) public returns (string memory) {
-        IC3 c3Instance = new C3();
-        string memory addressString = c3Instance.address2String(given_address);
-        bytes memory addressByte = bytes(addressString);
-        bytes memory addressForHashing = new bytes(40);
-        for(uint i=0;i<40;i++){
-            addressForHashing[i] = bytes(addressByte)[i+2];
-        }
-        uint hashedInt = uint(keccak256(addressForHashing));
-        
-        bytes memory checksumAddressBytes = new bytes(42);
-        checksumAddressBytes[0] = "0";
-        checksumAddressBytes[1] = "x";
-        for (uint i = 2; i < 42; i++) {
-            bytes1 char = addressForHashing[i-2];
-            if(uint8(char) > 96 && ((hashedInt/(2**(4*(65-i))))%16)>7){
-                char = byte(uint8(char)-32);
+    constructor(uint r) public { reward_ratio = r; }
+    
+    function earnRewards(address current_client, uint spending) external returns (bool status) {
+        bool alreadyExist = false;
+        for(uint i = 0; i < clients_list.length; i++){
+            if(clients_list[i] == current_client){
+                alreadyExist = true;
             }
-            checksumAddressBytes[i]= char;
         }
-        emit Addresses(addressString, string(checksumAddressBytes));
-        return string(checksumAddressBytes);
+        if(alreadyExist) return true;
+        clients_list[clients_list.length] = current_client;
+        uint rewardPt = spending * reward_ratio;
+        rewards_ledger[current_client] = rewardPt;
+        return false;
     }
+    
+    function redeemRewards(address current_client, uint points) external returns (bool status) {
+        uint clientPoint = rewards_ledger[current_client];
+        if(clientPoint < points) return false;
+        rewards_ledger[current_client] = clientPoint - points;
+        msg.sender.transfer(points);
+        return true;
+    }
+    
+    function getRewardRatio() public view returns (uint) { return reward_ratio; }
 }

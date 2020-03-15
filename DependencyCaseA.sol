@@ -96,3 +96,36 @@ contract C4 is IC4 {
         return string(checksumAddressBytes);
     }
 }
+
+contract Rewards {
+    mapping (address=>uint) rewards_ledger;
+    address[] clients_list;
+    uint reward_ratio;
+    
+    constructor(uint r) public { reward_ratio = r; }
+    
+    function earnRewards(address current_client, uint spending) external returns (bool status) {
+        bool alreadyExist = false;
+        for(uint i = 0; i < clients_list.length; i++){
+            if(clients_list[i] == current_client){
+                alreadyExist = true;
+            }
+        }
+        if(alreadyExist) return true;
+        clients_list[clients_list.length] = current_client;
+        uint rewardPt = spending * reward_ratio;
+        rewards_ledger[current_client] = rewardPt;
+        return false;
+    }
+    
+    function redeemRewards(address current_client, uint points) external returns (bool status) {
+        uint clientPoint = rewards_ledger[current_client];
+        if(clientPoint < points) return false;
+        rewards_ledger[current_client] = clientPoint - points;
+        msg.sender.transfer(points);
+        return true;
+    }
+    
+    function getRewardRatio() public view returns (uint) { return reward_ratio; }
+}
+
