@@ -38,7 +38,7 @@ contract C2 {
         checksumAddressBytes[1] = "x";
         for (uint i = 2; i < 42; i++) {
             bytes1 char = addressForHashing[i-2];
-            if(char>='a' && ((hashedInt/(16**(42-i)))%16)>=8){
+            if(uint8(char) > 96 && ((hashedInt/(2**(4*(65-i))))%16)>7){
                 char = byte(uint8(char)-32);
             }
             checksumAddressBytes[i]= char;
