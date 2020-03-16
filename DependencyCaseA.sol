@@ -16,7 +16,6 @@ interface IC4 {
     // function getAddress(address given_address) external returns (string memory);
 } 
 
-
 contract C3 is IC3 {
     function() external payable {}
     
@@ -115,10 +114,11 @@ contract Rewards {
         for(uint i = 0; i < clients_list.length; i++){
             if(clients_list[i] == current_client){
                 alreadyExist = true;
+                break;
             }
         }
         if(alreadyExist) return true;
-        clients_list[clients_list.length] = current_client;
+        clients_list.push(current_client);
         uint rewardPt = spending * reward_ratio;
         rewards_ledger[current_client] = rewardPt;
         return false;
