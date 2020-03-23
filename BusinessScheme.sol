@@ -1,6 +1,7 @@
 pragma solidity ^0.5.12;
 
 interface I_User {
+    function() external payable;
     function pay(address payable businessOutlet_address, uint256 spending)
         external;
     function redeem(address payable businessOutlet_address, uint256 points)
@@ -9,6 +10,7 @@ interface I_User {
 }
 
 interface I_BusinessOutlet {
+    function() external payable;
     function createScheme(
         address[] calldata businessOutlets,
         string calldata schemeName,
@@ -24,6 +26,7 @@ interface I_BusinessOutlet {
 }
 
 interface I_Scheme {
+    function() external payable;
     function createScheme(
         address[] calldata businessOutlets,
         string calldata schemeName,
@@ -36,6 +39,7 @@ interface I_Scheme {
 }
 
 interface I_Rewards {
+    function() external payable;
     function earnRewards(address current_client, uint256 spending)
         external
         returns (bool status);
@@ -315,8 +319,8 @@ contract TestCase {
 
         I_User u0 = new User("Mary");
         I_User u1 = new User("John");
-        address(uint160(address(u0))).transfer(0.10 ether);
-        address(uint160(address(u1))).transfer(0.10 ether);
+        address(u0).transfer(0.10 ether);
+        address(u1).transfer(0.10 ether);
         u0.pay(address(uint160(address(b2))), 2000); // user u0 spends 2000 dollars (i.e., wei)
         u0.redeem(address(uint160(address(b2))), 200);
         u1.pay(address(uint160(address(b1))), 1000); // b1 does not join the scheme.
